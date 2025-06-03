@@ -43,6 +43,113 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Preview endpoint - serves a live preview interface
+app.get('/preview', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'preview.html'));
+});
+
+// API endpoint to render component preview
+app.post('/api/preview-component', async (req, res) => {
+  try {
+    const { componentCode, componentName = 'GeneratedComponent' } = req.body;
+    
+    if (!componentCode) {
+      return res.status(400).json({ 
+        error: 'Component code is required',
+        details: 'Please provide componentCode in the request body'
+      });
+    }
+
+    // Create a safe preview HTML with the component code
+    const previewHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Preview - ${componentName}</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .preview-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .preview-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .preview-title {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+        }
+        .error-container {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 15px;
+            color: #c33;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .component-wrapper {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <h1 class="preview-title">Preview: ${componentName}</h1>
+        </div>
+        <div id="component-root" class="component-wrapper"></div>
+    </div>
+
+    <script type="text/babel">
+        try {
+            // Component code
+            ${componentCode}
+            
+            // Render the component
+            const root = ReactDOM.createRoot(document.getElementById('component-root'));
+            root.render(React.createElement(${componentName}));
+        } catch (error) {
+            console.error('Preview error:', error);
+            document.getElementById('component-root').innerHTML = 
+                '<div class="error-container">Error rendering component:\\n' + error.message + '</div>';
+        }
+    </script>
+</body>
+</html>`;
+
+    res.json({
+      success: true,
+      previewHtml,
+      componentName,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Preview generation error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate preview',
+      details: error.message 
+    });
+  }
+});
+
 // Main component generation endpoint
 app.post('/api/generate-component', async (req, res) => {
   try {
@@ -177,7 +284,9 @@ app.use((req, res) => {
     error: 'Endpoint not found',
     availableEndpoints: [
       'GET /health',
+      'GET /preview',
       'POST /api/generate-component',
+      'POST /api/preview-component',
       'GET /api/models',
       'GET /api/providers',
       'GET /api/examples',
@@ -192,7 +301,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(chalk.blue(`🌐 External access: http://0.0.0.0:${PORT}`));
   console.log(chalk.yellow('📚 Available endpoints:'));
   console.log(chalk.gray('  GET  /health - Health check'));
+  console.log(chalk.gray('  GET  /preview - Component preview interface'));
   console.log(chalk.gray('  POST /api/generate-component - Generate React component'));
+  console.log(chalk.gray('  POST /api/preview-component - Generate component preview'));
   console.log(chalk.gray('  GET  /api/models - List available models'));
   console.log(chalk.gray('  GET  /api/providers - List available providers'));
   console.log(chalk.gray('  GET  /api/examples - Get example prompts'));

@@ -5,11 +5,12 @@ A powerful API server that leverages OpenAI Codex to generate React components o
 ## 🚀 Features
 
 - **AI-Powered Component Generation**: Generate React components using various AI models
+- **Live Component Preview**: Real-time preview and testing of generated components
 - **Multiple Provider Support**: OpenAI, OpenRouter, Gemini, Mistral, Groq, Ollama, and more
 - **TypeScript & JavaScript Support**: Generate components in either language
 - **Styling Options**: Include or exclude styling in generated components
 - **Dependency Management**: Automatically detect and list required npm packages
-- **Web Interface**: Beautiful frontend for testing and demonstration
+- **Interactive Web Interface**: Beautiful frontend with component preview capabilities
 - **RESTful API**: Clean, well-documented API endpoints
 
 ## 🛠 Installation
@@ -91,6 +92,13 @@ The server will start on `http://localhost:12000` (or your configured PORT).
 
 Open `http://localhost:12000` in your browser to access the web interface for testing component generation.
 
+**Preview Interface**: Access `http://localhost:12000/preview` for the dedicated component preview interface where you can:
+- Test React components in real-time
+- Edit component code with syntax highlighting
+- See live rendering with React and Babel
+- Load example components
+- Interactive component testing
+
 ### API Endpoints
 
 #### Generate Component
@@ -131,9 +139,28 @@ Content-Type: application/json
 }
 ```
 
+#### Preview Component
+```http
+POST /api/preview-component
+Content-Type: application/json
+
+{
+  "code": "function MyButton() { return <button>Click me</button>; }"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "html": "<!-- Complete HTML with React component rendered -->"
+}
+```
+
 #### Other Endpoints
 
 - `GET /health` - Health check
+- `GET /preview` - Component preview interface
 - `GET /api/models` - List available models
 - `GET /api/providers` - List available providers  
 - `GET /api/examples` - Get example prompts

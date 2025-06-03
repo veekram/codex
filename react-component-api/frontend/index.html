@@ -333,6 +333,13 @@
                 setIncludeStyles(example.includeStyles);
             };
 
+            const openPreview = (componentCode) => {
+                // Open preview page with the component code
+                const encodedCode = encodeURIComponent(componentCode);
+                const previewUrl = `/preview?code=${encodedCode}`;
+                window.open(previewUrl, '_blank');
+            };
+
             return (
                 <div className="container">
                     <div className="header">
@@ -433,6 +440,34 @@
                                 <>
                                     <div className="success">
                                         <strong>Success!</strong> Component "{result.component.name}" generated successfully.
+                                        <div style={{marginTop: '12px'}}>
+                                            <button
+                                                className="button"
+                                                onClick={() => openPreview(result.component.code)}
+                                                style={{
+                                                    background: '#10b981',
+                                                    fontSize: '14px',
+                                                    padding: '8px 16px',
+                                                    marginRight: '8px'
+                                                }}
+                                            >
+                                                👁️ Preview Component
+                                            </button>
+                                            <a
+                                                href="/preview"
+                                                target="_blank"
+                                                className="button"
+                                                style={{
+                                                    background: '#6366f1',
+                                                    fontSize: '14px',
+                                                    padding: '8px 16px',
+                                                    textDecoration: 'none',
+                                                    display: 'inline-block'
+                                                }}
+                                            >
+                                                🎨 Open Preview Editor
+                                            </a>
+                                        </div>
                                     </div>
                                     
                                     <div className="code-container">
