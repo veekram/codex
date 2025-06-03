@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Component Preview - Codex API</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .preview-area {
+            min-height: 200px;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .preview-area.has-content {
+            border: 1px solid #dee2e6;
+            background: white;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .component-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 React Component Preview</h1>
+            <p>Test and preview your React components in real-time</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Code Editor Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    📝 Component Code
+                </div>
+                <div class="panel-content">
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="renderPreview()">
+                            <span id="render-icon">🚀</span> Render Preview
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearCode()">
+                            🗑️ Clear
+                        </button>
+                        <button class="btn btn-success" onclick="loadExample()">
+                            💡 Load Example
+                        </button>
+                        <a href="/" class="btn btn-secondary">
+                            ← Back to Generator
+                        </a>
+                    </div>
+                    <div id="error-container"></div>
+                    <div id="success-container"></div>
+                    <textarea 
+                        id="code-editor" 
+                        class="code-editor" 
+                        placeholder="Paste your React component code here...
+
+Example:
+function MyButton({ children, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      style={{
+        padding: '10px 20px',
+        backgroundColor: '#007bff',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }}
+    >
+      {children}
+    </button>
+  );
+}"></textarea>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    👁️ Live Preview
+                </div>
+                <div class="panel-content">
+                    <div id="component-info" class="component-info" style="display: none;">
+                        <strong>Component:</strong> <span id="component-name">-</span><br>
+                        <strong>Last Updated:</strong> <span id="last-updated">-</span>
+                    </div>
+                    <div id="preview-area" class="preview-area">
+                        <div class="preview-placeholder">
+                            Your component preview will appear here.<br>
+                            Enter your React component code and click "Render Preview".
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        let currentComponentName = 'GeneratedComponent';
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const container = document.getElementById('success-container');
+            container.innerHTML = `<div class="success-message">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        function setLoading(isLoading) {
+            const icon = document.getElementById('render-icon');
+            if (isLoading) {
+                icon.innerHTML = '<div class="loading"></div>';
+            } else {
+                icon.innerHTML = '🚀';
+            }
+        }
+
+        function extractComponentName(code) {
+            // Try to extract component name from function or class declarations
+            const functionMatches = code.match(/function\s+([A-Z][a-zA-Z0-9]*)/g);
+            const arrowMatches = code.match(/const\s+([A-Z][a-zA-Z0-9]*)\s*=/g);
+            const classMatches = code.match(/class\s+([A-Z][a-zA-Z0-9]*)/g);
+            
+            // If there's an App component, prefer that for rendering
+            if (code.includes('function App(') || code.includes('const App =') || code.includes('class App')) {
+                return 'App';
+            }
+            
+            // Otherwise, get the first component found
+            const functionMatch = code.match(/function\s+([A-Z][a-zA-Z0-9]*)/);
+            const arrowMatch = code.match(/const\s+([A-Z][a-zA-Z0-9]*)\s*=/);
+            const classMatch = code.match(/class\s+([A-Z][a-zA-Z0-9]*)/);
+            
+            return functionMatch?.[1] || arrowMatch?.[1] || classMatch?.[1] || 'GeneratedComponent';
+        }
+
+        async function renderPreview() {
+            const code = document.getElementById('code-editor').value.trim();
+            
+            if (!code) {
+                showError('Please enter some component code first.');
+                return;
+            }
+
+            setLoading(true);
+            
+            try {
+                // Extract component name from code
+                currentComponentName = extractComponentName(code);
+                
+                // Try to render directly first (for simple cases)
+                try {
+                    const previewArea = document.getElementById('preview-area');
+                    previewArea.innerHTML = '';
+                    previewArea.className = 'preview-area has-content';
+                    
+                    // Create a temporary script to test the code
+                    const testCode = `
+                        ${code}
+                        
+                        // Try to render the component
+                        const root = ReactDOM.createRoot(document.getElementById('preview-area'));
+                        root.render(React.createElement(${currentComponentName}));
+                    `;
+                    
+                    // Execute the code
+                    eval(Babel.transform(testCode, { presets: ['react'] }).code);
+                    
+                    // Update component info
+                    document.getElementById('component-name').textContent = currentComponentName;
+                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                    document.getElementById('component-info').style.display = 'block';
+                    
+                    showSuccess('Component rendered successfully!');
+                    
+                } catch (directError) {
+                    console.log('Direct render failed, trying API approach:', directError);
+                    
+                    // Fallback to API approach
+                    const response = await fetch('/api/preview-component', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            componentCode: code,
+                            componentName: currentComponentName
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to generate preview');
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Open preview in a new window/tab
+                        const previewWindow = window.open('', '_blank');
+                        previewWindow.document.write(result.previewHtml);
+                        previewWindow.document.close();
+                        
+                        showSuccess('Preview opened in new tab!');
+                    } else {
+                        throw new Error(result.error || 'Failed to generate preview');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Preview error:', error);
+                showError(`Preview Error: ${error.message}`);
+                
+                // Reset preview area
+                const previewArea = document.getElementById('preview-area');
+                previewArea.className = 'preview-area';
+                previewArea.innerHTML = '<div class="preview-placeholder">Error rendering component. Check your code and try again.</div>';
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function clearCode() {
+            document.getElementById('code-editor').value = '';
+            const previewArea = document.getElementById('preview-area');
+            previewArea.className = 'preview-area';
+            previewArea.innerHTML = '<div class="preview-placeholder">Your component preview will appear here.<br>Enter your React component code and click "Render Preview".</div>';
+            document.getElementById('component-info').style.display = 'none';
+        }
+
+        function loadExample() {
+            const exampleCode = `function MyButton({ children, onClick, variant = 'primary' }) {
+  const styles = {
+    primary: {
+      backgroundColor: '#007bff',
+      color: 'white',
+    },
+    secondary: {
+      backgroundColor: '#6c757d',
+      color: 'white',
+    },
+    success: {
+      backgroundColor: '#28a745',
+      color: 'white',
+    }
+  };
+
+  return (
+    <button 
+      onClick={onClick}
+      style={{
+        padding: '12px 24px',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '16px',
+        fontWeight: '500',
+        transition: 'all 0.2s',
+        ...styles[variant]
+      }}
+      onMouseOver={(e) => {
+        e.target.style.transform = 'translateY(-2px)';
+        e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseOut={(e) => {
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.boxShadow = 'none';
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Example usage
+function App() {
+  return (
+    <div style={{ padding: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <MyButton variant="primary" onClick={() => alert('Primary clicked!')}>
+        Primary Button
+      </MyButton>
+      <MyButton variant="secondary" onClick={() => alert('Secondary clicked!')}>
+        Secondary Button
+      </MyButton>
+      <MyButton variant="success" onClick={() => alert('Success clicked!')}>
+        Success Button
+      </MyButton>
+    </div>
+  );
+}`;
+
+            document.getElementById('code-editor').value = exampleCode;
+            showSuccess('Example code loaded! Click "Render Preview" to see it in action.');
+        }
+
+        // Auto-resize textarea
+        const textarea = document.getElementById('code-editor');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                renderPreview();
+            }
+        });
+
+        // Check if there's code passed via URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('code');
+        if (codeParam) {
+            try {
+                const decodedCode = decodeURIComponent(codeParam);
+                document.getElementById('code-editor').value = decodedCode;
+                showSuccess('Code loaded from URL parameter!');
+            } catch (error) {
+                console.error('Error loading code from URL:', error);
+            }
+        }
+    </script>
+</body>
+</html>
